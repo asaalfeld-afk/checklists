@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,12 +8,11 @@
   <style>
     :root { --max: 760px; }
 
-body {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  margin: 0;
-  background: #e3f2ee; /* light tint of #0c8571 */
-}
-
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0;
+      background: #eef7f4; /* light tint of #0c8571 */
+    }
 
     .wrap {
       max-width: var(--max);
@@ -21,13 +20,12 @@ body {
       padding: 16px;
     }
 
-.card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 8px 22px rgba(12, 133, 113, 0.12);
-}
-
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 22px rgba(12, 133, 113, 0.12);
+    }
 
     h1 {
       font-size: 1.4rem;
@@ -54,12 +52,8 @@ body {
       margin: 12px 0 18px;
       padding: 12px 14px;
       background: #f2f4f8;
-      border-left: 4px solid #5b6cff;
+      border-left: 4px solid #0c8571;
       border-radius: 10px;
-    }
-
-    .stem p {
-      margin: 4px 0;
       font-weight: 600;
     }
 
@@ -130,7 +124,7 @@ body {
   <div class="wrap">
     <div class="card" role="region" aria-label="Objetivos checklist">
 
-      <h1 id="title">🎯 Objetivos</h1>
+      <h1>🎯 Objetivos</h1>
 
       <p class="meta">
         <span class="pill" id="pill"></span>
@@ -138,17 +132,17 @@ body {
       </p>
 
       <div class="stem">
-        <p>Without using notes, I can…/Sin usar apuntes, puedo…</p>
+        Sin usar apuntes, puedo…
       </div>
 
       <div id="content"></div>
 
       <div class="btnrow" id="buttons" style="display:none;">
-        <button type="button" id="resetBtn">Reset this checklist</button>
+        <button type="button" id="resetBtn">Reiniciar esta lista</button>
       </div>
 
       <p class="note" id="note" style="display:none;">
-        Checks are saved on <strong>this device/browser</strong>. If you switch devices or clear browser data, they may reset.
+        Las casillas se guardan en <strong>este dispositivo/navegador</strong>.
       </p>
 
     </div>
@@ -191,13 +185,17 @@ body {
      ======================= */
 
   const params = new URLSearchParams(window.location.search);
+
   const course = (params.get("course") || "").toUpperCase();
+
+  const sem = params.get("sem");
+  const semNum = sem ? String(parseInt(sem, 10)) : "";
+
   const week = params.get("week");
   const weekNum = week ? String(parseInt(week, 10)) : "";
 
-  const titleEl = document.getElementById("title");
-  const subtitleEl = document.getElementById("subtitle");
   const pillEl = document.getElementById("pill");
+  const subtitleEl = document.getElementById("subtitle");
   const contentEl = document.getElementById("content");
   const buttonsEl = document.getElementById("buttons");
   const noteEl = document.getElementById("note");
@@ -208,20 +206,19 @@ body {
   pillEl.textContent = courseObj ? courseObj.name : "Objetivos";
 
   if (!courseObj || !items) {
-    subtitleEl.innerHTML = `<span class="error">Missing or invalid course/week.</span>`;
+    subtitleEl.innerHTML = `<span class="error">Curso o semana no válidos.</span>`;
     contentEl.innerHTML = `
-      <p>Try a URL like:</p>
+      <p>Ejemplo de enlace:</p>
       <ul>
-        <li><code>?course=S1&week=7</code></li>
-        <li><code>?course=S3&week=2</code></li>
+        <li><code>?course=S1&sem=1&week=7</code></li>
       </ul>
     `;
     return;
   }
 
-  subtitleEl.textContent = `— Week ${weekNum}`;
+  subtitleEl.textContent = `· Semestre ${semNum} · Semana ${weekNum}`;
 
-  const storageKey = `targets:${course}:week:${weekNum}`;
+  const storageKey = `targets:${course}:sem${semNum}:week${weekNum}`;
   let state = {};
 
   try {
@@ -233,7 +230,7 @@ body {
   const ul = document.createElement("ul");
 
   items.forEach((text, idx) => {
-    const id = `cb_${course}_${weekNum}_${idx}`;
+    const id = `cb_${course}_${semNum}_${weekNum}_${idx}`;
 
     const li = document.createElement("li");
 
@@ -261,7 +258,7 @@ body {
   noteEl.style.display = "block";
 
   document.getElementById("resetBtn").addEventListener("click", () => {
-    if (!confirm("Reset all checks for this week?")) return;
+    if (!confirm("¿Reiniciar esta lista?")) return;
     state = {};
     localStorage.removeItem(storageKey);
     ul.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
