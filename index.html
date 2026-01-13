@@ -117,6 +117,8 @@
       color: #b00020;
       font-weight: 600;
     }
+
+    code { font-size: .95em; }
   </style>
 </head>
 
@@ -135,7 +137,7 @@
         Sin usar apuntes, puedo…
       </div>
 
-      <div id="content"></div>
+      <div id="content">Loading…</div>
 
       <div class="btnrow" id="buttons" style="display:none;">
         <button type="button" id="resetBtn">Reiniciar esta lista</button>
@@ -155,96 +157,75 @@
      EDIT OBJECTIVES HERE
      ======================= */
 
- const TARGETS = {
-   window.TARGETS = TARGETS;
-  S1: {
-    name: "Spanish 1",
-    semesters: {
-      1: {
-        weeks: {
-          1: [
-            "access Spanish class in Canvas"
-          ],
-          2: [
-            "introduce myself in Spanish",
-            "greet teachers and other students appropriately",
-            "recognize 5 or more letters of the alphabet"
-          ],
-          3: [
-            "introduce myself in Spanish",
-            "greet teachers and other students appropriately",
-            "spell my name",
-            "recognize 10 or more letters of the alphabet",
-            "exchange email addresses (using notes)"
-          ],
-          4: [
-            "introduce myself in Spanish",
-            "greet teachers and other students appropriately",
-            "spell my name",
-            "recognize 15 or more letters of the alphabet",
-            "say how old I am",
-            "exchange email addresses",
-            "exchange phone numbers",
-            "recognize numbers 0–99 when I hear them (using notes)"
-          ]
-        }
-      },
-      2: {
-        weeks: {
-          1: [
-            "match a picture to its description in Spanish",
-            "recognize 25 or more vocab words without using notes",
-            "interpret present tense verb endings"
-          ],
-          2: [
-            "recognize 30 or more vocab words without using notes",
-            "say where I go on a typical weekend",
-            "interpret present tense verb endings",
-            "interpret informational texts in Spanish"
-          ],
-          3: [
-            "recognize 35 or more vocab words without using notes",
-            "say what my friends and I do on a typical weekend",
-            "interpret present tense verb endings",
-            "interpret informational texts in Spanish"
-          ],
-          U3: [
-            "describe my daily and weekly activities",
-            "describe the daily and weekly activities of people around me",
-            "talk about what I like to do and don’t like to do",
-            "understand spoken and written descriptions of people’s activities when given in simple language",
-            "start to communicate in complete sentences",
-            "interpret meaning differences in different verb endings"
-          ]
+  const TARGETS = {
+    S1: {
+      name: "Spanish 1",
+      semesters: {
+        1: {
+          weeks: {
+            1: [
+              "access Spanish class in Canvas"
+            ],
+            2: [
+              "introduce myself in Spanish",
+              "greet teachers and other students appropriately",
+              "recognize 5 or more letters of the alphabet"
+            ],
+            3: [
+              "introduce myself in Spanish",
+              "greet teachers and other students appropriately",
+              "spell my name",
+              "recognize 10 or more letters of the alphabet",
+              "exchange email addresses (using notes)"
+            ],
+            4: [
+              "introduce myself in Spanish",
+              "greet teachers and other students appropriately",
+              "spell my name",
+              "recognize 15 or more letters of the alphabet",
+              "say how old I am",
+              "exchange email addresses",
+              "exchange phone numbers",
+              "recognize numbers 0–99 when I hear them (using notes)"
+            ]
+          }
+        },
+        2: {
+          weeks: {
+            1: [
+              "match a picture to its description in Spanish",
+              "recognize 25 or more vocab words without using notes",
+              "interpret present tense verb endings"
+            ],
+            2: [
+              "recognize 30 or more vocab words without using notes",
+              "say where I go on a typical weekend",
+              "interpret present tense verb endings",
+              "interpret informational texts in Spanish"
+            ],
+            3: [
+              "recognize 35 or more vocab words without using notes",
+              "say what my friends and I do on a typical weekend",
+              "interpret present tense verb endings",
+              "interpret informational texts in Spanish"
+            ],
+            U3: [
+              "describe my daily and weekly activities",
+              "describe the daily and weekly activities of people around me",
+              "talk about what I like to do and don’t like to do",
+              "understand spoken and written descriptions of people’s activities when given in simple language",
+              "start to communicate in complete sentences",
+              "interpret meaning differences in different verb endings"
+            ]
+          }
         }
       }
-    }
-  },
+    },
 
-  S2: {
-    name: "Spanish 2",
-    semesters: {
-      1: { weeks: {} },
-      2: { weeks: {} }
-    }
-  },
-
-  S3: {
-    name: "Spanish 3",
-    semesters: {
-      1: { weeks: {} },
-      2: { weeks: {} }
-    }
-  },
-
-  S4: {
-    name: "Spanish 4",
-    semesters: {
-      1: { weeks: {} },
-      2: { weeks: {} }
-    }
-  }
-};
+    S2: { name: "Spanish 2", semesters: { 1: { weeks: {} }, 2: { weeks: {} } } },
+    S3: { name: "Spanish 3", semesters: { 1: { weeks: {} }, 2: { weeks: {} } } },
+    S4: { name: "Spanish 4", semesters: { 1: { weeks: {} }, 2: { weeks: {} } } }
+  };
 
   /* =======================
      DO NOT EDIT BELOW
@@ -252,14 +233,13 @@
 
   const params = new URLSearchParams(window.location.search);
 
-  const course = (params.get("course") || "").toUpperCase();
+  const course = (params.get("course") || "").trim().toUpperCase();
 
-  // Default to semester 1 if missing or invalid
-  const semRaw = params.get("sem");
-  const semNum = (semRaw && ["1","2"].includes(String(parseInt(semRaw, 10)))) ? String(parseInt(semRaw, 10)) : "1";
+  // Robust semester parsing: accept sem=2 OR sem=S2 (Canvas naming collision)
+  const semRaw = (params.get("sem") || "").trim().toUpperCase();
+  const semNum = (semRaw === "2" || semRaw === "S2") ? "2" : "1";
 
   const weekRaw = params.get("week");
-  // Allow numeric weeks (1–20) AND special strings like U1 later
   const weekKey = weekRaw ? String(weekRaw).trim() : "";
 
   const pillEl = document.getElementById("pill");
@@ -276,9 +256,11 @@
   if (!courseObj || !weekKey || !items) {
     subtitleEl.innerHTML = `<span class="error">Curso/semestre/semana no válidos.</span>`;
     contentEl.innerHTML = `
-      <p>Ejemplo de enlace:</p>
+      <p>Ejemplos de enlaces:</p>
       <ul>
-        <li><code>?course=S1&sem=1&week=7</code></li>
+        <li><code>?course=S1&sem=1&week=4</code></li>
+        <li><code>?course=S1&sem=2&week=1</code></li>
+        <li><code>?course=S1&sem=2&week=U3</code></li>
       </ul>
     `;
     return;
@@ -321,7 +303,9 @@
     ul.appendChild(li);
   });
 
+  contentEl.innerHTML = "";
   contentEl.appendChild(ul);
+
   buttonsEl.style.display = "flex";
   noteEl.style.display = "block";
 
